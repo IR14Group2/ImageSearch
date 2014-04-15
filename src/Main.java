@@ -1,5 +1,5 @@
 /**
- * Created by mac on 2014-04-15.
+ * Main class that starts the GUI.
  */
 public class Main {
 
@@ -8,7 +8,6 @@ public class Main {
     // Start the main GUI
     GUI gui = new GUI();
     gui.init();
-    gui.run();
   }
 
 }
