@@ -1,7 +1,14 @@
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.GridLayout;
+import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.LinkedList;
 
 import javax.swing.ImageIcon;
@@ -42,7 +49,7 @@ public class GUI extends JFrame implements ActionListener {
   JMenuItem jIndexUrlMenuItem;
   JTextField jSearchField;
   JButton jSearchButton;
-  JPanel resultPanel;
+  JPanel jresultPanel;
 //  JTextArea jResult;
 
   /**
@@ -56,7 +63,7 @@ public class GUI extends JFrame implements ActionListener {
    * Initialize the GUI, add all components and action listeners.
    */
   public void init() {
-
+    
     jMainPanel = new JPanel(new BorderLayout());
     jMenuBar = new JMenuBar();
     jFileMenu = new JMenu("File");
@@ -64,10 +71,8 @@ public class GUI extends JFrame implements ActionListener {
     JPanel searchPanel = new JPanel();
     jSearchField = new JTextField(40);
     jSearchButton = new JButton("Search");
-    System.err.println(PICTURES_WIDTH);
-    resultPanel = new JPanel(new GridLayout(0, Math.min(MAX_PIC_WIDTH, PICTURES_WIDTH)));// Don't want more than MAX_PIC_WIDTH pictures in width
-//    jResult = new JTextArea();
-    
+    jresultPanel = new JPanel(new GridLayout(0, Math.min(MAX_PIC_WIDTH, PICTURES_WIDTH)));// Don't want more than MAX_PIC_WIDTH pictures in width
+ 
 
 
     // Set all action listeners
@@ -80,7 +85,7 @@ public class GUI extends JFrame implements ActionListener {
     
     jMenuBar.add(jFileMenu);
     jMainPanel.add(searchPanel, BorderLayout.PAGE_START);
-    jMainPanel.add(resultPanel, BorderLayout.LINE_START);
+    jMainPanel.add(jresultPanel, BorderLayout.LINE_START);
     
     //Makes the main panel scrollable
     JScrollPane scrollpane = new JScrollPane(jMainPanel);
@@ -115,15 +120,29 @@ public class GUI extends JFrame implements ActionListener {
     jSearchButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-//        jMainPanel.add(new TextArea("Searching"));
+        long time = System.currentTimeMillis();
         SolrDocumentList documents = index.search(jSearchField.getText());
-        LinkedList<ImageIcon> img = index.getImages(documents);//This might be better to do asynchronous
+
+        LinkedList<ImageIcon> img = null;
+    try {
+      img = index.getImages(documents);
+    } catch (IOException e1) {
+      jresultPanel.add(new TextArea("Could not load images, maybe your internet doesnt work or the search result images does not exist"));
+       validate();
+          repaint();
+          return;
+    }//This might be better to do asynchronous
+        
         LinkedList<String> info = index.getInformation(documents);
+        
+        LinkedList<String> urls = index.getURLs(documents);
                 
         //Clear resultPanel from previous results
-        resultPanel.removeAll();
+        jresultPanel.removeAll();
         
         JLabel jLabel;
+        JButton websiteButton;
+        JPanel buttonAndLabel;
         if(img == null){
           System.err.println("Cannot find images");
         }
@@ -132,14 +151,40 @@ public class GUI extends JFrame implements ActionListener {
       jLabel = new JLabel(info.get(i), index.resizeImage(img.get(i),IMAGE_SIZE,IMAGE_SIZE), JLabel.CENTER);
       jLabel.setHorizontalTextPosition(JLabel.CENTER);
       jLabel.setVerticalTextPosition(JLabel.BOTTOM);
-          resultPanel.add( jLabel);
+      websiteButton = new JButton("Go to website");
+      URI uri0 = null;
+      try {
+        uri0 = (new URL(urls.get(i)).toURI());
+      } catch (MalformedURLException | URISyntaxException e1) {
+        e1.printStackTrace();
+      }
+      final URI uri = uri0;
+      websiteButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          open(uri);          
+        }
+      });
+      buttonAndLabel = new JPanel(new BorderLayout());
+      
+          buttonAndLabel.add( jLabel, BorderLayout.CENTER);
+          buttonAndLabel.add(websiteButton, BorderLayout.PAGE_END);
+          jresultPanel.add(buttonAndLabel);
+          
     }
         validate();
         repaint();
-
       }
     });
   }
+  
+  private static void open(URI uri) {
+      if (Desktop.isDesktopSupported()) {
+        try {
+          Desktop.getDesktop().browse(uri);
+        } catch (IOException e) { /* TODO: error handling */ }
+      } else { /* TODO: error handling */ }
+    }
 
   @Override
   public void actionPerformed(ActionEvent e) {
