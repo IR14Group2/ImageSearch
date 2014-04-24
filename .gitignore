@@ -2,3 +2,4 @@
 .idea
 ImageSearch.iml
 out/
+bin/*.class
