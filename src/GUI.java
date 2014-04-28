@@ -174,6 +174,20 @@ public class GUI extends JFrame implements ActionListener {
     }
         validate();
         repaint();
+          System.err.println("Have searched");
+//          System.err.println("total time " + (System.currentTimeMillis()-time));
+//          try {
+//        Desktop.getDesktop().browse((new URL("http://www.google.com")).toURI());
+//      } catch (MalformedURLException e1) {
+//        // TODO Auto-generated catch block
+//        e1.printStackTrace();
+//      } catch (IOException e1) {
+//        // TODO Auto-generated catch block
+//        e1.printStackTrace();
+//      } catch (URISyntaxException e1) {
+//        // TODO Auto-generated catch block
+//        e1.printStackTrace();
+//      }
       }
     });
   }

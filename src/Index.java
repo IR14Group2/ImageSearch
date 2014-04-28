@@ -101,7 +101,6 @@ public class Index {
     LinkedList<ImageIcon> pictures = null;
 //    long time=0;
       pictures = new LinkedList<ImageIcon>();
-      final LinkedList<ImageIcon> picSync = pictures;
       for (SolrDocument doc : docs) {
             String pictureURL = (String) doc.getFieldValue(PICTURE_URL);
 //            long tic = System.currentTimeMillis();
@@ -110,7 +109,7 @@ public class Index {
             ImageIcon img = new ImageIcon(buffImage);
 //            time += (System.currentTimeMillis()-tic);
   
-              picSync.add(img);
+            pictures.add(img);
 
         
       }
