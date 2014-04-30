@@ -2,12 +2,14 @@
  * Low resolution image producer.
  */
 
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
@@ -65,7 +67,8 @@ public class LowResImgProducer {
    * @param imgUrl The URL to the image file
    * @param fileName The name of the file to be save including the image extension
    */
-  public void saveImg(String imgUrl, String fileName) {
+  public ImageIcon saveImg(String imgUrl, String fileName, boolean returnImage) {
+    System.out.println("Save to file " + fileName + " from " + imgUrl);
     try {
       URL url = new URL(imgUrl);
       BufferedImage originalBufImg = ImageIO.read(url);
@@ -82,9 +85,16 @@ public class LowResImgProducer {
       FileOutputStream out = new FileOutputStream(targetPath);
       ImageIO.write(resizedBufImg, FILE_EXTENSION, out);
       out.close();
+      
+      //If the saved image is also wanted to be returned
+      if(returnImage){
+        return new ImageIcon(resizedBufImg);
+      }
+      
     } catch (IOException e) {
       System.out.println("Error when trying to save an img from URL");
       e.printStackTrace();
     }
+    return null;
   }
 }

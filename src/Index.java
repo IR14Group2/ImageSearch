@@ -2,17 +2,14 @@
  * Created by mac on 2014-04-15.
  */
 import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.TreeSet;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
@@ -22,34 +19,25 @@ public class Index {
   String solrURL = "http://localhost:8983/solr";
   SolrServer server;
   
+  ////////////////////////////////////CHANGE THIS WHEN USING IT ON ANOTHER COMPUTER/////////////////////////////////////
+  String imageMap = "C:/Users/Caroline/Documents/GitHub/ImageSearch/images";
+  LowResImgProducer imgProducer;
+  final int IMAGE_SIZE = 100;
+
   final static String PICTURE_URL = "ir_picture_url";
   final static String SITE_URL = "ir_site_url";
+  final static String FILE_NAME = "id";
+  final static String defaultImage = "default";
+  final static String defaultImageURL = "http://www.drumwright.co.uk/media/product/pop/default.jpg";
+  final static String request_handler = "/dismax";
 
   public Index() {
     server = new HttpSolrServer(solrURL);
-    try{
-    addDocument();
+    imgProducer = new LowResImgProducer(imageMap, IMAGE_SIZE, IMAGE_SIZE);
+    // Add default image:
+    if (!imgProducer.hasImg(defaultImage)) {
+      imgProducer.saveImg(defaultImageURL, defaultImage, false);
     }
-    catch(Exception e){
-      e.printStackTrace();
-    }
-  }
-
-  public void addDocument() throws SolrServerException, IOException {
-//    SolrInputDocument doc1 = new SolrInputDocument();
-//    doc1.addField("id", 84772);
-//    doc1.addField("name", "annat doc");
-//    doc1.addField("features", "det var en gång ett dokument bla bla stol");
-//    doc1.addField(
-//        "url",
-//        "http://nlini.com/media/catalog/product/cache/6/image/f7985cac0ddadce81af15edad277f260/a/j/aj_7_stol_sort_700x700_1.jpg");
-//    Collection<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
-//      docs.add( doc1 );
-//      server.add(docs);
-//      UpdateRequest req = new UpdateRequest();
-//      req.setAction( UpdateRequest.ACTION.COMMIT, false, false );
-//      req.add( docs );
-//      UpdateResponse rsp = req.process( server );
   }
 
   /*
@@ -61,6 +49,8 @@ public class Index {
 
   public SolrDocumentList search(String query) {
     SolrQuery queryObject = new SolrQuery();
+    System.err.println("The query " + query);
+    queryObject.setRequestHandler(request_handler);
     queryObject.setQuery(query);
 
     try {
@@ -72,6 +62,15 @@ public class Index {
       e.printStackTrace();
     }
     return null;
+  }
+  
+  public SolrDocumentList search(String query, String boostingWords){
+    String[] words = boostingWords.split(" ");
+    StringBuilder sb = new StringBuilder();
+    for (int i=0;i<words.length; i++) {
+      sb.append(words[i]+ "^30 ");
+    }
+    return search(query + " " + sb.toString());
   }
 
   public LinkedList<String> getInformation(SolrDocumentList docs) {
@@ -89,34 +88,40 @@ public class Index {
   }
 
   /*
-   * Retrieves all the images from the documents in docs. For this to work,
-   * all resulting documents need a field called "url" that is the url to the
-   * image.
-   * 
-   * Change this function if the images should be retrieved from a saved place
-   * locally.
+   * Retrieves all the images from the documents in docs. First see if picture
+   * have been stored, and then retrieve it, or save from URL and then
+   * retrieve it. For this to work, all resulting documents need a field
+   * PICTURE_URL that is the url to the image.
    */
+  public LinkedList<ImageIcon> getSavedImages(SolrDocumentList docs) {
 
-  public LinkedList<ImageIcon> getImages(SolrDocumentList docs) throws IOException {
     LinkedList<ImageIcon> pictures = null;
-//    long time=0;
-      pictures = new LinkedList<ImageIcon>();
-      for (SolrDocument doc : docs) {
-            String pictureURL = (String) doc.getFieldValue(PICTURE_URL);
-//            long tic = System.currentTimeMillis();
-            URL urlobj = new URL(pictureURL);
-            BufferedImage buffImage = ImageIO.read(urlobj);
-            ImageIcon img = new ImageIcon(buffImage);
-//            time += (System.currentTimeMillis()-tic);
-  
-            pictures.add(img);
-
-        
+    // long time=0;
+    pictures = new LinkedList<ImageIcon>();
+    for (SolrDocument doc : docs) {
+      String pictureURL = (String) doc.getFieldValue(PICTURE_URL);
+      // long tic = System.currentTimeMillis();
+      String fileName = (String) doc.getFieldValue(FILE_NAME);
+      ImageIcon pic = null;
+      if (imgProducer.hasImg(fileName)) {
+        pic = imgProducer.getImg(fileName);
+      } else {
+        pic = imgProducer.saveImg(pictureURL, fileName, true);
+      }
+      // time += (System.currentTimeMillis()-tic);
+      if (pic == null) {
+        pictures.add(imgProducer.getImg(defaultImage)); // Add default
+                                // image if link
+                                // doesn't work
+        System.err.println("Warning, this picture is null!");
+      } else {
+        pictures.add(pic);
       }
 
-//    System.err.println("total time to get pic " + time);
-    return pictures;
+    }
 
+    // System.err.println("total time to get pic " + time);
+    return pictures;
   }
 
   public LinkedList<String> getURLs(SolrDocumentList docs) {
@@ -124,7 +129,7 @@ public class Index {
     try {
       urls = new LinkedList<String>();
       for (SolrDocument doc : docs) {
-        
+
         String url = (String) doc.getFieldValue(SITE_URL);
         urls.add(url);
       }
@@ -133,13 +138,6 @@ public class Index {
     }
     return urls;
 
-  }
-  
-  public ImageIcon getImage(String pictureURL) throws IOException{
-        URL urlobj = new URL(pictureURL);
-        BufferedImage buffImage = ImageIO.read(urlobj);
-        ImageIcon img = new ImageIcon(buffImage);
-    return img;
   }
 
   public ImageIcon resizeImage(ImageIcon icon, int width, int height) {
@@ -150,40 +148,43 @@ public class Index {
     return newIcon;
   }
 
-  // public String connect(String query) throws Exception {
-  // URL url = new URL(urlString + query);
-  // URLConnection connection = url.openConnection();
-  // BufferedReader in = new BufferedReader(new InputStreamReader(
-  // connection.getInputStream()));
-  // String inputLine;
-  // StringBuffer returnString = new StringBuffer();
-  // while ((inputLine = in.readLine()) != null) {
-  // returnString.append(inputLine).append("\n");
-  // }
-  //
-  // in.close();
-  // return returnString.toString();
-  // }
-
-  /*
-   * public String getURL(String xmlString){ try { DocumentBuilderFactory
-   * dbFactory = DocumentBuilderFactory.newInstance(); DocumentBuilder
-   * dBuilder = dbFactory.newDocumentBuilder(); Document doc =
-   * dBuilder.parse(xmlString); doc.getDocumentElement().normalize();
-   * 
-   * // System.out.println("root of xml file" +
-   * doc.getDocumentElement().getNodeName()); NodeList nodes =
-   * doc.getElementsByTagName("result"); //
-   * System.out.println("==========================");
-   * 
-   * for (int i = 0; i < nodes.getLength(); i++) { Node node = nodes.item(i);
-   * Element element = (Element) node;
-   * 
-   * } } catch (Exception ex) { ex.printStackTrace(); } }
-   * 
-   * private static String getValue(String tag, Element element) { NodeList
-   * nodes = element.getElementsByTagName(tag).item(0).getChildNodes(); Node
-   * node = (Node) nodes.item(0); return node.getNodeValue(); }
-   */
+  public String relevanceFeedback(TreeSet<SolrDocument> input) {
+    // TODO make a complete list of accepted fields that should be used in relevance feedback. ID, for example, is not wanted
+    String[] acceptedFields = { "features", "name", "caption" };
+    StringBuilder query = new StringBuilder();
+    for (SolrDocument doc : input) {
+      // Collection<String> fields = doc.getFieldNames();
+      for (int i = 0; i < acceptedFields.length; i++) {
+        Object fieldVal = doc.getFieldValue(acceptedFields[i]);
+        if(fieldVal == null){
+          continue;
+        }
+        String value = null;
+        try { //Try if value is a String, if not, try if it is arraylist
+          value = (String) fieldVal;
+        } catch (Exception e) {   
+          
+        }
+        if(value == null){
+          //Try if the field is an arraylist of strings instead of a String
+          try{
+          ArrayList<String> list = (ArrayList<String>) doc.getFieldValue(acceptedFields[i]);
+          for (String s : list) {
+            
+            query.append(s.replaceAll(":", " "));
+          }
+          }catch(Exception e){
+            System.err.println("The field " + acceptedFields[i] + " is neither String or Arraylist<String>, field not " +
+                "used in relevance feedback");
+          }
+        }
+        if (value != null) {
+          //Need to replace ":" by " " because ":" means searching for a field.
+          query.append(value);
+        }
+      }
+    }
+    return query.toString();
+  }
 
 }

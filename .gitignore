@@ -4,6 +4,8 @@ ImageSearch.iml
 out/
 bin/*.class
 images/*
+!images/README.txt
+!images/default
 
 
 #################

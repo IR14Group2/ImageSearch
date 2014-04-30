@@ -1,2 +1,2 @@
 #!/bin/bash
-javac -d ../bin ../src/*.java
+javac -cp C:/solr-4.7.1/dist/* -d ../bin ../src/*.java
