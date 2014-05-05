@@ -1,4 +1,4 @@
 #!/bin/bash
 cd ../bin
-java Main
+java -cp "../../solr-4.7.2/dist/*:../../solr-4.7.2/dist/solrj-lib/*:../bin" Main
 cd ../scripts
