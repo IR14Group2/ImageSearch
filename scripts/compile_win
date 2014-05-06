@@ -1,0 +1,3 @@
+#!/bin/bash
+rm ../bin/*.class
+javac -cp "../../solr-4.7.2/dist/*;../../solr-4.7.2/dist/solrj-lib/*" -d ../bin ../src/*.java

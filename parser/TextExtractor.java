@@ -20,6 +20,7 @@ class Add {
 
 @XmlRootElement(name = "doc")
 class Doc {
+	@XmlElement(name = "field")
 	public ArrayList<Field> fields = new ArrayList<Field>();
 }
 
@@ -79,6 +80,8 @@ public class TextExtractor {
 		System.out.println(doc);
 		
 		Add add = new Add();
+		
+		int idCounter = 1000;
 		
 		Elements images = doc.select("img");
 		String allText = doc.select("body").get(0).text();
@@ -145,6 +148,7 @@ public class TextExtractor {
 				d.fields.add(new Field("ir_header", headlineAfter));
 			}
 			
+			d.fields.add(new Field("id", "" + idCounter++));
 			d.fields.add(new Field("ir_picture_url", img.attr("abs:src")));
 			d.fields.add(new Field("ir_site_url", url));
 			d.fields.add(new Field("ir_title", pageTitle));
