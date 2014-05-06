@@ -263,13 +263,13 @@ public class GUI extends JFrame implements ActionListener {
           c.gridx = 0;
           c.gridy = 1;
           String clusterLabel = indexCluster.label;
-          if (clusterLabel.length() > 24) {
+          if (clusterLabel.length() > 20) {
             clusterPanel.add(new JTextField(clusterLabel
-                .subSequence(0, 24).toString()), c);
+                .subSequence(0, 20).toString()), c);
             c.gridx = 0;
             c.gridy = 2;
             clusterPanel.add(new JTextField(clusterLabel
-                .subSequence(24, clusterLabel.length())
+                .subSequence(20, Math.min(clusterLabel.length(),40))
                 .toString()), c);
           } else {
             clusterPanel.add(new JTextField(clusterLabel), c);

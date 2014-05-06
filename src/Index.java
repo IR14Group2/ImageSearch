@@ -250,7 +250,7 @@ public class Index {
     LinkedList<IndexCluster> clusterList =  new LinkedList<IndexCluster>();;
     try {
       URL obj = new URL(solrURL + "/collection1/dismax?q=" + query
-          + "&wt=xml");
+          + "&wt=xml&rows=20");
 
       HttpURLConnection con = (HttpURLConnection) obj.openConnection();
       con.setRequestMethod("GET");
