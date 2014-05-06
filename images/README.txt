@@ -1,1 +1,0 @@
-This map should contain the images saved down locally when making a search.

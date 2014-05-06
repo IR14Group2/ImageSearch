@@ -2,11 +2,15 @@
  * Created by mac on 2014-04-15.
  */
 import java.awt.Image;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.TreeSet;
 
 import javax.swing.ImageIcon;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
@@ -14,12 +18,16 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class Index {
   String solrURL = "http://localhost:8983/solr";
   SolrServer server;
-  
-  ////////////////////////////////////CHANGE THIS WHEN USING IT ON ANOTHER COMPUTER/////////////////////////////////////
+
+  // //////////////////////////////////CHANGE THIS WHEN USING IT ON ANOTHER
+  // COMPUTER/////////////////////////////////////
   String imageMap = "C:/Users/Caroline/Documents/GitHub/ImageSearch/images";
   LowResImgProducer imgProducer;
   final int IMAGE_SIZE = 100;
@@ -29,7 +37,9 @@ public class Index {
   final static String FILE_NAME = "id";
   final static String defaultImage = "default";
   final static String defaultImageURL = "http://www.drumwright.co.uk/media/product/pop/default.jpg";
+  final static String defaultURL = "http://google.com";
   final static String request_handler = "/dismax";
+  final static int rowsRetrieved = 50;
 
   public Index() {
     server = new HttpSolrServer(solrURL);
@@ -49,13 +59,28 @@ public class Index {
 
   public SolrDocumentList search(String query) {
     SolrQuery queryObject = new SolrQuery();
-    System.err.println("The query " + query);
+    System.err.println("Seached for: " + query);
     queryObject.setRequestHandler(request_handler);
     queryObject.setQuery(query);
+    queryObject.setRows(rowsRetrieved);
+    // queryObject.setFacet(true);
+    // queryObject.addFacetField("ir_header");
 
     try {
       QueryResponse rsp = server.query(queryObject);
       SolrDocumentList docs = rsp.getResults();
+
+      // Test of Facetsearch
+      // facetfield is the field to count different words in. fq means
+      // filterquery, could be used when a special word is needed, found
+      // from a facet
+
+      // List<FacetField> facetFields = rsp.getFacetFields();
+      // List<Count> counts = rsp.getFacetField("ir_header").getValues();
+      // for (Count c : counts) {
+      // System.out.println(c.getName() + " " + c.getCount());
+      // //
+      // }
       return docs;
 
     } catch (Exception e) {
@@ -63,12 +88,12 @@ public class Index {
     }
     return null;
   }
-  
-  public SolrDocumentList search(String query, String boostingWords){
+
+  public SolrDocumentList search(String query, String boostingWords) {
     String[] words = boostingWords.split(" ");
     StringBuilder sb = new StringBuilder();
-    for (int i=0;i<words.length; i++) {
-      sb.append(words[i]+ "^30 ");
+    for (int i = 0; i < words.length; i++) {
+      sb.append(words[i] + "^30 ");
     }
     return search(query + " " + sb.toString());
   }
@@ -126,15 +151,16 @@ public class Index {
 
   public LinkedList<String> getURLs(SolrDocumentList docs) {
     LinkedList<String> urls = null;
-    try {
-      urls = new LinkedList<String>();
-      for (SolrDocument doc : docs) {
 
+    urls = new LinkedList<String>();
+    for (SolrDocument doc : docs) {
+      try {
         String url = (String) doc.getFieldValue(SITE_URL);
         urls.add(url);
+      } catch (Exception e) {
+        System.err.println("Could not find URL for document");
+        urls.add(defaultURL);
       }
-    } catch (Exception e) {
-      e.printStackTrace();
     }
     return urls;
 
@@ -148,38 +174,55 @@ public class Index {
     return newIcon;
   }
 
+  public ImageIcon getImage(String fileName) {
+    if (imgProducer.hasImg(fileName)) {
+      return imgProducer.getImg(fileName);
+    }
+    return null;
+
+  }
+
   public String relevanceFeedback(TreeSet<SolrDocument> input) {
-    // TODO make a complete list of accepted fields that should be used in relevance feedback. ID, for example, is not wanted
-    String[] acceptedFields = { "features", "name", "caption" };
+    // TODO make a complete list of accepted fields that should be used in
+    // relevance feedback. ID, for example, is not wanted
+    String[] acceptedFields = { "ir_img_title", "ir_header", "ir_alt",
+        "ir_title", "ir_alt" };
     StringBuilder query = new StringBuilder();
     for (SolrDocument doc : input) {
       // Collection<String> fields = doc.getFieldNames();
       for (int i = 0; i < acceptedFields.length; i++) {
         Object fieldVal = doc.getFieldValue(acceptedFields[i]);
-        if(fieldVal == null){
+        if (fieldVal == null) {
           continue;
         }
         String value = null;
-        try { //Try if value is a String, if not, try if it is arraylist
+        try { // Try if value is a String, if not, try if it is
+            // arraylist
           value = (String) fieldVal;
-        } catch (Exception e) {   
-          
+        } catch (Exception e) {
+
         }
-        if(value == null){
-          //Try if the field is an arraylist of strings instead of a String
-          try{
-          ArrayList<String> list = (ArrayList<String>) doc.getFieldValue(acceptedFields[i]);
-          for (String s : list) {
-            
-            query.append(s.replaceAll(":", " "));
-          }
-          }catch(Exception e){
-            System.err.println("The field " + acceptedFields[i] + " is neither String or Arraylist<String>, field not " +
-                "used in relevance feedback");
+        if (value == null) {
+          // Try if the field is an arraylist of strings instead of a
+          // String
+          try {
+            ArrayList<String> list = (ArrayList<String>) doc
+                .getFieldValue(acceptedFields[i]);
+            for (String s : list) {
+
+              query.append(s.replaceAll(":", " "));
+            }
+          } catch (Exception e) {
+            System.err
+                .println("The field "
+                    + acceptedFields[i]
+                    + " is neither String or Arraylist<String>, field not "
+                    + "used in relevance feedback");
           }
         }
         if (value != null) {
-          //Need to replace ":" by " " because ":" means searching for a field.
+          // Need to replace ":" by " " because ":" means searching
+          // for a field.
           query.append(value);
         }
       }
@@ -187,4 +230,73 @@ public class Index {
     return query.toString();
   }
 
+  // public void sendGet() throws IOException {
+  // URL obj = new URL(solrURL + "/collection1/dismax?q=dn&wt=xml");
+  // HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+  // con.setRequestMethod("GET");
+  // try {
+  // parseXMLtoCluster(con.getInputStream());
+  // } catch (ParserConfigurationException e) {
+  // // TODO Auto-generated catch block
+  // e.printStackTrace();
+  // } catch (SAXException e) {
+  // // TODO Auto-generated catch block
+  // e.printStackTrace();
+  // }
+  //
+  // }
+
+  public LinkedList<IndexCluster> getClusters(String query) {
+    LinkedList<IndexCluster> clusterList =  new LinkedList<IndexCluster>();;
+    try {
+      URL obj = new URL(solrURL + "/collection1/dismax?q=" + query
+          + "&wt=xml");
+
+      HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+      con.setRequestMethod("GET");
+
+      // Parse the XML given as result
+      DocumentBuilderFactory dbFactory = DocumentBuilderFactory
+          .newInstance();
+      DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+      Document doc = dBuilder.parse(con.getInputStream());
+      doc.getDocumentElement().normalize();
+      Node response = doc.getElementsByTagName("response").item(0);
+      NodeList children = response.getChildNodes();
+
+      Node clusters = children.item(3);// "clusters" node
+      NodeList clusterNodes = clusters.getChildNodes();// all its elements
+
+      for (int i = 0; i < clusterNodes.getLength(); i++) {
+        NodeList info = clusterNodes.item(i).getChildNodes(); // All the
+                                    // cluster's
+                                    // info
+        Node labels = info.item(0);
+        if (labels.getTextContent().equals("Other Topics")) {
+          break;
+        }
+        NodeList docs = info.item(2).getChildNodes();
+        IndexCluster cl = new IndexCluster();
+        cl.label = labels.getTextContent();
+        for (int j = 0; j < docs.getLength(); j++) {
+          cl.solrID.add(docs.item(j).getChildNodes().item(0)
+              .getTextContent());
+        }
+        clusterList.add(cl);
+      }
+      con.getInputStream().close();
+    } catch (Exception e) {
+      
+      System.err
+          .println("Could not cluster. Error in getClusters(query) in Index:");
+      System.err.println(e.getMessage());
+    }
+    return clusterList;
+  }
+
+}
+
+class IndexCluster {
+  String label;
+  LinkedList<String> solrID = new LinkedList<String>();
 }

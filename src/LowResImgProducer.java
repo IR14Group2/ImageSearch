@@ -72,14 +72,22 @@ public class LowResImgProducer {
     try {
       URL url = new URL(imgUrl);
       BufferedImage originalBufImg = ImageIO.read(url);
+      BufferedImage resizedBufImg = null;
+      if(originalBufImg.getHeight()>height && originalBufImg.getWidth() > width){
       // Resize the image with the default image scaling algorithm Image.SCALE_DEFAULT
-      Image resizedImg = originalBufImg.getScaledInstance(width, height, Image.SCALE_DEFAULT);
-      BufferedImage resizedBufImg = new BufferedImage(width, height, originalBufImg.getType());
-      Graphics2D graphics = resizedBufImg.createGraphics();
-      // Draw the graphics object from coordinate (0, 0) with the ImageObserver set to null
-      graphics.drawImage(resizedImg, 0, 0, null);
-      // Dispose the graphics when no longer needed
-      graphics.dispose();
+          Image resizedImg = originalBufImg.getScaledInstance(width, height, Image.SCALE_DEFAULT);
+          resizedBufImg = new BufferedImage(width, height, originalBufImg.getType());
+          Graphics2D graphics = resizedBufImg.createGraphics();
+          // Draw the graphics object from coordinate (0, 0) with the ImageObserver set to null
+          graphics.drawImage(resizedImg, 0, 0, null);
+          // Dispose the graphics when no longer needed
+          graphics.dispose();
+      } 
+      else{
+        //Don't resize if picture is smaller than max scale
+        resizedBufImg = originalBufImg;
+      }
+      
       // Save the img to disk
       String targetPath = filePath + fileName;
       FileOutputStream out = new FileOutputStream(targetPath);
