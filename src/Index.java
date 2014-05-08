@@ -28,7 +28,7 @@ public class Index {
 
   // //////////////////////////////////CHANGE THIS WHEN USING IT ON ANOTHER
   // COMPUTER/////////////////////////////////////
-  String imageMap = "C:/Users/Caroline/Documents/GitHub/ImageSearch/images";
+  String imageMap = "/Users/andershuss/IdeaProjects/ImageSearch/images";
   LowResImgProducer imgProducer;
   final int IMAGE_SIZE = 100;
 
@@ -247,7 +247,8 @@ public class Index {
   // }
 
   public LinkedList<IndexCluster> getClusters(String query) {
-    LinkedList<IndexCluster> clusterList =  new LinkedList<IndexCluster>();;
+    LinkedList<IndexCluster> clusterList =  new LinkedList<IndexCluster>();
+
     try {
       URL obj = new URL(solrURL + "/collection1/dismax?q=" + query
           + "&wt=xml");
