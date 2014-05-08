@@ -3,7 +3,8 @@
  */
 import java.awt.Image;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.TreeSet;
@@ -40,6 +41,9 @@ public class Index {
   final static String defaultURL = "http://google.com";
   final static String request_handler = "/dismax";
   final static int rowsRetrieved = 50;
+  final static int CLUSTER_ROWS = 100;
+  final static String[] ACCEPTED_REL_FEEDBACK_FIELDS = { "ir_img_title", "ir_header", "ir_alt",
+    "ir_title", "ir_text1" };
 
   public Index() {
     server = new HttpSolrServer(solrURL);
@@ -185,13 +189,12 @@ public class Index {
   public String relevanceFeedback(TreeSet<SolrDocument> input) {
     // TODO make a complete list of accepted fields that should be used in
     // relevance feedback. ID, for example, is not wanted
-    String[] acceptedFields = { "ir_img_title", "ir_header", "ir_alt",
-        "ir_title", "ir_alt" };
+
     StringBuilder query = new StringBuilder();
     for (SolrDocument doc : input) {
       // Collection<String> fields = doc.getFieldNames();
-      for (int i = 0; i < acceptedFields.length; i++) {
-        Object fieldVal = doc.getFieldValue(acceptedFields[i]);
+      for (int i = 0; i < ACCEPTED_REL_FEEDBACK_FIELDS.length; i++) {
+        Object fieldVal = doc.getFieldValue(ACCEPTED_REL_FEEDBACK_FIELDS[i]);
         if (fieldVal == null) {
           continue;
         }
@@ -207,7 +210,7 @@ public class Index {
           // String
           try {
             ArrayList<String> list = (ArrayList<String>) doc
-                .getFieldValue(acceptedFields[i]);
+                .getFieldValue(ACCEPTED_REL_FEEDBACK_FIELDS[i]);
             for (String s : list) {
 
               query.append(s.replaceAll(":", " "));
@@ -215,7 +218,7 @@ public class Index {
           } catch (Exception e) {
             System.err
                 .println("The field "
-                    + acceptedFields[i]
+                    + ACCEPTED_REL_FEEDBACK_FIELDS[i]
                     + " is neither String or Arraylist<String>, field not "
                     + "used in relevance feedback");
           }
@@ -230,29 +233,18 @@ public class Index {
     return query.toString();
   }
 
-  // public void sendGet() throws IOException {
-  // URL obj = new URL(solrURL + "/collection1/dismax?q=dn&wt=xml");
-  // HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-  // con.setRequestMethod("GET");
-  // try {
-  // parseXMLtoCluster(con.getInputStream());
-  // } catch (ParserConfigurationException e) {
-  // // TODO Auto-generated catch block
-  // e.printStackTrace();
-  // } catch (SAXException e) {
-  // // TODO Auto-generated catch block
-  // e.printStackTrace();
-  // }
-  //
-  // }
-
   public LinkedList<IndexCluster> getClusters(String query) {
-    LinkedList<IndexCluster> clusterList =  new LinkedList<IndexCluster>();;
+    LinkedList<IndexCluster> clusterList = new LinkedList<IndexCluster>();
+    ;
     try {
-      URL obj = new URL(solrURL + "/collection1/dismax?q=" + query
-          + "&wt=xml&rows=20");
-
-      HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+      // URL obj = new URL(solrURL + "/collection1/dismax?q=" + query
+      // + "&wt=xml&rows=100");
+      String queryEnc = URLEncoder.encode(query, "UTF-8");
+      URI uri = new URI("http", null, "localhost", 8983,
+          "/solr/collection1" + request_handler, "q=" + queryEnc
+              + "&wt=xml&" + "rows=" + CLUSTER_ROWS, null);
+      HttpURLConnection con = (HttpURLConnection) (uri.toURL())
+          .openConnection();
       con.setRequestMethod("GET");
 
       // Parse the XML given as result
@@ -286,7 +278,7 @@ public class Index {
       }
       con.getInputStream().close();
     } catch (Exception e) {
-      
+
       System.err
           .println("Could not cluster. Error in getClusters(query) in Index:");
       System.err.println(e.getMessage());
