@@ -100,8 +100,7 @@ public class LowResImgProducer {
       }
       
     } catch (IOException e) {
-      System.out.println("Error when trying to save an img from URL");
-      e.printStackTrace();
+      System.err.println("Error when trying to save an img from URL. error: " + e.getMessage());
     }
     return null;
   }

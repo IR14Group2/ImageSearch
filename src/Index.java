@@ -211,10 +211,6 @@ public class Index {
           try {
             ArrayList<String> list = (ArrayList<String>) doc
                 .getFieldValue(ACCEPTED_REL_FEEDBACK_FIELDS[i]);
-            for (String s : list) {
-
-              query.append(s.replaceAll(":", " "));
-            }
           } catch (Exception e) {
             System.err
                 .println("The field "
@@ -235,7 +231,7 @@ public class Index {
 
   public LinkedList<IndexCluster> getClusters(String query) {
     LinkedList<IndexCluster> clusterList = new LinkedList<IndexCluster>();
-    ;
+    
     try {
       // URL obj = new URL(solrURL + "/collection1/dismax?q=" + query
       // + "&wt=xml&rows=100");

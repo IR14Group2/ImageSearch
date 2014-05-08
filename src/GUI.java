@@ -212,6 +212,7 @@ public class GUI extends JFrame implements ActionListener {
     LinkedList<String> urls = index.getURLs(documents);
 
     if (info == null || info.size() == 0) {
+      jResCluster.removeAll();
       System.err.println("No results found");
       jResCluster.add(new JTextField("No results found"),
           BorderLayout.NORTH);
