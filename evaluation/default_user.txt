@@ -1,7 +1,7 @@
 # RESULT FROM EVALUATION (SETUP BELLOW)
 #
 # --- Request Handlers ---
-# alt_only
+# name_only
 # text1_only
 # allFields_equal
 # allFields_weighting
@@ -24,8 +24,8 @@
 # blue
 #
 # --- Evaluation Data ---
-RH 0 alt_only
-/ No Results # (0) zlatan
+RH 0 name_only
+0 1 0 1 0 # (5) zlatan
 - Not Evaluated: "prince_charles"
 - Not Evaluated: "princess_madeleine"
 - Not Evaluated: "abraham_lincoln"
@@ -58,11 +58,11 @@ RH 1 text1_only
 - Not Evaluated: blue
 RH 2 allFields_equal
 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # (30) zlatan
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 # (14) "prince_charles"
-0 0 0 0 0 0 # (6) "princess_madeleine"
-0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # (30) "abraham_lincoln"
-1 1 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # (30) Obama
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # (30) airplane_aircraft
+- Not Evaluated: "prince_charles"
+- Not Evaluated: "princess_madeleine"
+- Not Evaluated: "abraham_lincoln"
+- Not Evaluated: Obama
+- Not Evaluated: airplane_aircraft
 - Not Evaluated: USA_america_US_"United_States"
 - Not Evaluated: children_child
 - Not Evaluated: banana_apple_fruit
@@ -73,12 +73,12 @@ RH 2 allFields_equal
 - Not Evaluated: red
 - Not Evaluated: blue
 RH 3 allFields_weighting
-- Not Evaluated: zlatan
+0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # (30) zlatan
 - Not Evaluated: "prince_charles"
 - Not Evaluated: "princess_madeleine"
 - Not Evaluated: "abraham_lincoln"
 - Not Evaluated: Obama
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # (30) airplane_aircraft
+- Not Evaluated: airplane_aircraft
 - Not Evaluated: USA_america_US_"United_States"
 - Not Evaluated: children_child
 - Not Evaluated: banana_apple_fruit

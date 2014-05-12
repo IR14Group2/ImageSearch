@@ -4,7 +4,7 @@
 public class Main {
 
     //Toggle between evaluation and normal mode:
-    private static boolean evaluationMode = false;
+    private static boolean evaluationMode = true;
 
     public static void main(String[] args) {
 

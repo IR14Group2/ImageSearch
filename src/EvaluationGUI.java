@@ -63,16 +63,16 @@ public class EvaluationGUI extends JFrame implements ActionListener {
     private final String[] evaluationRequestHandlers = {"name_only", "text1_only",
             "allFields_equal", "allFields_weighting"};
     private final String[] evaluationQueries = {"zlatan",
-            "\"prince charles\"",
-            "\"princess madeleine\"",
+            "\"angela merkel\" angela merkel",
+            "\"princess victoria\"",
             "\"abraham lincoln\"",
             "Obama",
 
             "airplane aircraft",
-            "USA america US \"United States\"",
+            "USA america",
             "children child",
             "banana apple fruit",
-            "\"New York\"",
+            "New York Yankees",
 
             "\"stock market\"",
             "violence",
@@ -189,7 +189,7 @@ public class EvaluationGUI extends JFrame implements ActionListener {
 
         jFileMenu.add(jIndexUrlMenuItem);
         searchPanel.add(jSearchField);
-        searchPanel.add(jSearchButton);
+        //searchPanel.add(jSearchButton);
 
         jBrowseButtonsPanel.add(jBrowseHandlerBwd);
         jBrowseButtonsPanel.add(jBrowseHandlerFwd);
@@ -210,7 +210,7 @@ public class EvaluationGUI extends JFrame implements ActionListener {
         jMainPanel.add(jResCluster, BorderLayout.CENTER);
 
 
-        jEndButtonsPanel.add(jrelevanceFeedbackButton, BorderLayout.PAGE_START);
+        //jEndButtonsPanel.add(jrelevanceFeedbackButton, BorderLayout.PAGE_START);
         jMainPanel.add(jEndButtonsPanel, BorderLayout.PAGE_END);
 
         // Makes the main panel scrollable
@@ -451,7 +451,16 @@ public class EvaluationGUI extends JFrame implements ActionListener {
                 ",  Current query nb:  " + curQuery);
         index.setRequest_handler(evaluationRequestHandlers[curReqHandler]);
         this.jSearchField.setText(evaluationQueries[curQuery]);
-        this.searchAndUpdateGUI(evaluationQueries[curQuery], null);
+        try{
+            this.searchAndUpdateGUI(evaluationQueries[curQuery], null);
+        }
+        catch (Exception e){
+            System.out.println("Warning: \"un handled\" exception in searchAndUpdate");
+            e.printStackTrace();
+            jresultPanel.removeAll();
+            validate();
+            repaint();
+        }
     }
 
     private static void open(URI uri) {
@@ -479,6 +488,8 @@ public class EvaluationGUI extends JFrame implements ActionListener {
         } else {
             resultDocuments = index.search(query);
         }
+
+        System.out.println(query + " resultDocs size: " + resultDocuments.size());
 
         LinkedList<ImageIcon> img = index.getSavedImages(resultDocuments);
 
@@ -632,6 +643,9 @@ public class EvaluationGUI extends JFrame implements ActionListener {
             }
 
         }
+        if(img.size() == 0){
+            jresultPanel.removeAll();
+        }
         validate();
         repaint();
         System.err.println("Searched with " + resultDocuments.size()
@@ -647,7 +661,7 @@ public class EvaluationGUI extends JFrame implements ActionListener {
 
 
 
-    private static void saveResultToFile(ArrayList<JCheckBox>[][] relevanceCheckBoxes,
+    private void saveResultToFile(ArrayList<JCheckBox>[][] relevanceCheckBoxes,
                                          String[] requestHandlers,
                                          String[] queries,
                                          String filePathName, boolean matlabFormat){
@@ -655,54 +669,88 @@ public class EvaluationGUI extends JFrame implements ActionListener {
 
         System.err.print("Storing evaluation result to file... ");
 
-        //General INFO
-        sb.append("# RESULT FROM EVALUATION (SETUP BELLOW)\n");
-        sb.append("#\n");
-        sb.append("# --- Request Handlers ---\n");
-        for(String reqHand: requestHandlers){
-            sb.append("# " + reqHand + "\n");
-        }
-        sb.append("#\n# --- Queries ---\n");
-        for(String query: queries){
-            sb.append("# " + query + "\n");
-        }
-        sb.append("#\n# --- Evaluation Data ---\n");
-        // DATA:
-        // nb_results 1 0 0 1 ...
-        for (int rhIdx = 0; rhIdx < relevanceCheckBoxes.length; rhIdx++){
-            sb.append("RH " + rhIdx + " " + requestHandlers[rhIdx] + "\n");
-            for (int qIdx = 0; qIdx < relevanceCheckBoxes[rhIdx].length; qIdx++){
-                if(relevanceCheckBoxes[rhIdx][qIdx] != null){
-                    if(relevanceCheckBoxes[rhIdx][qIdx].size() == 0){
-                        sb.append("/ No Results ");
-                    }
-                    for (JCheckBox checkBox : relevanceCheckBoxes[rhIdx][qIdx]){
-                        if (checkBox.isSelected()){
-                            sb.append("1 ");
-                        }
-                        else {
-                            sb.append("0 ");
+        if (matlabFormat){
+            for (int rhIdx = 0; rhIdx < relevanceCheckBoxes.length; rhIdx++){
+                for (int qIdx = 0; qIdx < relevanceCheckBoxes[rhIdx].length; qIdx++){
+                    sb.append("rh"+(rhIdx+1)+"q"+(qIdx+1)+" = [ ");
+                    if(relevanceCheckBoxes[rhIdx][qIdx] != null){
+                        for (JCheckBox checkBox : relevanceCheckBoxes[rhIdx][qIdx]){
+                            if (checkBox.isSelected()){
+                                sb.append("1 ");
+                            }
+                            else {
+                                sb.append("0 ");
+                            }
                         }
                     }
-                    sb.append("# ("+ relevanceCheckBoxes[rhIdx][qIdx].size() + ") "); //nb of results
+                    sb.append("];\n");
+                    sb.append("res{"+ (rhIdx+1) + ", "+ (qIdx + 1) + "} = rh"+(rhIdx+1)+"q"+(qIdx+1) + ";\n");
                 }
-                else{
-                    sb.append("- Not Evaluated: ");
-                }
-                sb.append(queries[qIdx].replace(' ', '_') + "\n");
             }
-        }
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(filePathName + ".txt");
-            out.print(sb.toString());
-            out.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+            PrintWriter out = null;
+            try {
+                out = new PrintWriter(filePathName + ".m");
+                out.print(sb.toString());
+                out.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
 
-        if (out != null){
-            out.close();
+            if (out != null){
+                out.close();
+            }
+
+        }
+        else{
+            //General INFO
+            sb.append("# RESULT FROM EVALUATION (SETUP BELLOW)\n");
+            sb.append("#\n");
+            sb.append("# --- Request Handlers ---\n");
+            for(String reqHand: requestHandlers){
+                sb.append("# " + reqHand + "\n");
+            }
+            sb.append("#\n# --- Queries ---\n");
+            for(String query: queries){
+                sb.append("# " + query + "\n");
+            }
+            sb.append("#\n# --- Evaluation Data ---\n");
+            // DATA:
+            // nb_results 1 0 0 1 ...
+            for (int rhIdx = 0; rhIdx < relevanceCheckBoxes.length; rhIdx++){
+                sb.append("RH " + rhIdx + " " + requestHandlers[rhIdx] + "\n");
+                for (int qIdx = 0; qIdx < relevanceCheckBoxes[rhIdx].length; qIdx++){
+                    if(relevanceCheckBoxes[rhIdx][qIdx] != null){
+                        if(relevanceCheckBoxes[rhIdx][qIdx].size() == 0){
+                            sb.append("/ No Results ");
+                        }
+                        for (JCheckBox checkBox : relevanceCheckBoxes[rhIdx][qIdx]){
+                            if (checkBox.isSelected()){
+                                sb.append("1 ");
+                            }
+                            else {
+                                sb.append("0 ");
+                            }
+                        }
+                        sb.append("# ("+ relevanceCheckBoxes[rhIdx][qIdx].size() + ") "); //nb of results
+                    }
+                    else{
+                        sb.append("- Not Evaluated: ");
+                    }
+                    sb.append(queries[qIdx].replace(' ', '_') + "\n");
+                }
+            }
+            PrintWriter out = null;
+            try {
+                out = new PrintWriter(filePathName + ".txt");
+                out.print(sb.toString());
+                out.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            if (out != null){
+                out.close();
+            }
         }
 
         System.err.println("Complete!");
