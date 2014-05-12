@@ -6,7 +6,9 @@ bin/*.class
 images/*
 !images/README.txt
 !images/default
-
+evaluation/*
+!evaluation/default_user.txt
+!evaluation/default_user.evl
 
 #################
 ## Eclipse
