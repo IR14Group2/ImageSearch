@@ -56,11 +56,11 @@ public class EvaluationGUI extends JFrame implements ActionListener {
     private static boolean saveSearchResults = true;
 
     // only for testing
-    //private final String[] evaluationRequestHandlers = {"alt_only", "text1_only"};
+    //private final String[] evaluationRequestHandlers = {"name_only", "text1_only"};
     //private final String[] evaluationQueries = {"zlatan","\"prince charles\"", "\"princess madeleine\""};
 
 
-    private final String[] evaluationRequestHandlers = {"alt_only", "text1_only",
+    private final String[] evaluationRequestHandlers = {"name_only", "text1_only",
             "allFields_equal", "allFields_weighting"};
     private final String[] evaluationQueries = {"zlatan",
             "\"prince charles\"",
