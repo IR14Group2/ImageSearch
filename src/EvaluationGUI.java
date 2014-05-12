@@ -134,7 +134,8 @@ public class EvaluationGUI extends JFrame implements ActionListener {
                 saveResultToFile(relevanceCheckBoxes,
                         evaluationRequestHandlers,
                         evaluationQueries,
-                        index.projectPath + "/evaluation/" + userName);
+                        index.projectPath + "/evaluation/" + userName,
+                        true);
                 e.getWindow().dispose();
             }
         });
@@ -360,7 +361,8 @@ public class EvaluationGUI extends JFrame implements ActionListener {
                 saveResultToFile(relevanceCheckBoxes,
                         evaluationRequestHandlers,
                         evaluationQueries,
-                        index.projectPath + "/evaluation/" + userName);
+                        index.projectPath + "/evaluation/" + userName,
+                        true);
 
                 if (saveSearchResults){
                     System.err.print("Storing search results (images) to file... ");
@@ -371,7 +373,7 @@ public class EvaluationGUI extends JFrame implements ActionListener {
                                         index.projectPath + "/evaluation/imageResults/" +
                                                 userName + "_" +
                                                 evaluationRequestHandlers[rhIdx] + "_" +
-                                                evaluationQueries[qIdx]);
+                                                evaluationQueries[qIdx].replace("\"", "_"));
                             }
                         }
                     }
@@ -648,7 +650,7 @@ public class EvaluationGUI extends JFrame implements ActionListener {
     private static void saveResultToFile(ArrayList<JCheckBox>[][] relevanceCheckBoxes,
                                          String[] requestHandlers,
                                          String[] queries,
-                                         String filePathName){
+                                         String filePathName, boolean matlabFormat){
         StringBuilder sb = new StringBuilder();
 
         System.err.print("Storing evaluation result to file... ");
