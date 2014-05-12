@@ -28,7 +28,7 @@ public class Index {
   SolrServer server;
 
   ///////////   CHANGE THIS WHEN USING IT ON ANOTHER COMPUTER   ////////////
-  String projectPath = "/Users/andershuss/IdeaProjects/ImageSearch";
+  String projectPath = "C:/Users/Caroline/Documents/GitHub/ImageSearch";
 
   String imageFolder = projectPath + "/images";
   LowResImgProducer imgProducer;
@@ -132,11 +132,16 @@ public class Index {
       // long tic = System.currentTimeMillis();
       String fileName = (String) doc.getFieldValue(FILE_NAME);
       ImageIcon pic = null;
+      try{
       if (imgProducer.hasImg(fileName)) {
         pic = imgProducer.getImg(fileName);
       } else {
         pic = imgProducer.saveImg(pictureURL, fileName, true);
       }
+    }
+    catch(Exception e){
+      System.err.println("Picture could not be read, error " + e.getMessage());
+    }
       // time += (System.currentTimeMillis()-tic);
       if (pic == null) {
         pictures.add(imgProducer.getImg(defaultImage)); // Add default
